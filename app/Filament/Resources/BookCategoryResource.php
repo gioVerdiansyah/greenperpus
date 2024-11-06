@@ -25,7 +25,7 @@ class BookCategoryResource extends Resource
     {
         return $form
             ->schema([
-                TextInput::make("name")->required()->unique(ignoreRecord: true)
+                TextInput::make("name")->required()->unique(ignoreRecord:true)
             ]);
     }
 
@@ -33,11 +33,11 @@ class BookCategoryResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make("name")->searchable(),
-                TextColumn::make('books_count')
-                    ->label("Total Book")
-                    ->counts('books')
-                    ->sortable()
+                TextColumn::make("name"),
+                TextColumn::make("total")
+                    ->counts("books"),
+                TextColumn::make("created_at")
+                    ->date("d/m/Y")
             ])
             ->filters([
                 //
@@ -68,13 +68,8 @@ class BookCategoryResource extends Resource
         ];
     }
 
-    public static function getNavigationGroup(): string|null
+    public static function getNavigationGroup():string
     {
-        return "Management Book";
-    }
-
-    public static function getNavigationLabel():string
-    {
-        return "Categories";
+        return "Management";
     }
 }

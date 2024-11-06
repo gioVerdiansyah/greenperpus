@@ -4,25 +4,11 @@ namespace App\Filament\Auth;
 
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Facades\Filament;
-use Filament\Http\Responses\Auth\Contracts\LoginResponse;
-use Filament\Models\Contracts\FilamentUser;
 use Filament\Pages\Auth\Login;
-use Illuminate\Contracts\Support\Htmlable;
+use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 
 class UserLogin extends Login
 {
-    public function getTItle(): string|Htmlable
-    {
-        return "User Login";
-    }
-    public function getHeading(): string|Htmlable
-    {
-        return "Login User";
-    }
-    public function getSubheading(): string|Htmlable
-    {
-        return "Welcome to GreenPerpus, let's read your favorite book!";
-    }
     public function authenticate(): ?LoginResponse
     {
         try {
@@ -41,7 +27,7 @@ class UserLogin extends Login
 
         $user = Filament::auth()->user();
 
-        if ($user->role != "USER") {
+        if($user->role != "USER"){
             Filament::auth()->logout();
 
             $this->throwFailureValidationException();

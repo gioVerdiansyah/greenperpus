@@ -17,18 +17,14 @@ class EditOfficer extends EditRecord
         ];
     }
 
-    public function getTitle(): string
-    {
-        return "Edit Officer";
-    }
-
-    protected function getRedirectUrl(): string
-    {
-        return $this->getResource()::getUrl('index');
-    }
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $data['role'] = "OFFICER";
         return $data;
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return parent::getResource()::getUrl('index');
     }
 }

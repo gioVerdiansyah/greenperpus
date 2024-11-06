@@ -2,6 +2,6 @@
 
 return [
     App\Providers\AppServiceProvider::class,
-    App\Providers\Filament\AdminIniPanelProvider::class,
-    App\Providers\Filament\UserIniPanelPanelProvider::class,
+    App\Providers\Filament\AdminPanelProvider::class,
+    App\Providers\Filament\UserPanelProvider::class,
 ];

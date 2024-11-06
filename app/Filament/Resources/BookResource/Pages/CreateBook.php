@@ -12,6 +12,6 @@ class CreateBook extends CreateRecord
 
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index');
+        return parent::getResource()::getUrl('index');
     }
 }

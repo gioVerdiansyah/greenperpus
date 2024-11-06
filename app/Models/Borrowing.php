@@ -9,10 +9,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Borrowing extends Model
 {
     use HasUuids;
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
+
     public function book(): BelongsTo
     {
         return $this->belongsTo(Book::class);

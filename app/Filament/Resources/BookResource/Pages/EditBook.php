@@ -12,7 +12,7 @@ class EditBook extends EditRecord
 
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index');
+        return parent::getResource()::getUrl('index');
     }
     protected function getHeaderActions(): array
     {

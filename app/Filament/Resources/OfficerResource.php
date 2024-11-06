@@ -3,7 +3,9 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\OfficerResource\Pages;
+use App\Filament\Resources\OfficerResource\RelationManagers;
 use App\Models\User;
+use Filament\Forms;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -11,32 +13,32 @@ use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class OfficerResource extends Resource
 {
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
-    protected static ?string $navigationLabel = "Officers data";
-    protected static ?string $Label = "Officer";
-    protected static ?string $pluralLabel = "Officer";
+    protected static ?string $navigationLabel = 'Officer';
+    protected static ?string $Label = 'Officer';
+    protected static ?string $pluralLabel = 'Officer';
 
-    public static function canAccess():bool
+    public static function canAccess(): bool
     {
         return auth()->user()->role == "ADMIN";
+    }
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->where("role", "OFFICER");
     }
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 TextInput::make("name")->required(),
-                TextInput::make("email")
-                    ->required()
-                    ->unique(ignoreRecord: true),
-                TextInput::make("password")
-                    ->required()
-                    ->password()
-                    ->dehydrateStateUsing(fn($state) => bcrypt($state))
+                TextInput::make("email")->required()->unique(ignoreRecord: true),
+                TextInput::make("password")->required()->password()
             ]);
     }
 
@@ -44,9 +46,10 @@ class OfficerResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make("name")->searchable(),
-                TextColumn::make("email")->searchable(),
-                TextColumn::make("created_at")->date("d/m/y")
+                TextColumn::make("name"),
+                TextColumn::make("email"),
+                TextColumn::make("created_at")
+                    ->date("d/m/Y"),
             ])
             ->filters([
                 //
@@ -61,10 +64,6 @@ class OfficerResource extends Resource
             ]);
     }
 
-    public static function getEloquentQuery():Builder
-    {
-        return parent::getEloquentQuery()->where("role", "OFFICER");
-    }
     public static function getRelations(): array
     {
         return [
@@ -81,8 +80,8 @@ class OfficerResource extends Resource
         ];
     }
 
-    public static function getNavigationGroup(): string|null
+    public static function getNavigationGroup(): string
     {
-        return "Officer";
+        return "Officers";
     }
 }

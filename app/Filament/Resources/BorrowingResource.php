@@ -4,21 +4,18 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BorrowingResource\Pages;
 use App\Filament\Resources\BorrowingResource\RelationManagers;
+use App\Models\Book;
 use App\Models\Borrowing;
 use Filament\Forms;
-use Filament\Forms\Components\Actions;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\HeaderActionsPosition;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class BorrowingResource extends Resource
 {
@@ -30,7 +27,10 @@ class BorrowingResource extends Resource
     {
         return false;
     }
-
+    public static function canEdit($record): bool
+    {
+        return false;
+    }
     public static function form(Form $form): Form
     {
         return $form
@@ -43,15 +43,17 @@ class BorrowingResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make("user.name")->label("Borrowing"),
-                TextColumn::make("book.name"),
-                TextColumn::make("created_at")
-                    ->label("Borrowed at")
-                    ->date("d/m/y h:i:s"),
+                TextColumn::make("user.name")
+                    ->label("User"),
+                TextColumn::make("book.title")
+                    ->label("Book"),
+                TextColumn::make("total"),
+                TextColumn::make("book.stock"),
                 TextColumn::make("return_date")
-                    ->date("d/m/y h:i:s")
-                    ->label("Return date"),
-                TextColumn::make("status"),
+                    ->date("d/m/y"),
+                TextColumn::make("created_at")
+                    ->label("Borrowed At")
+                    ->date("d/m/y"),
             ])
             ->filters([
                 //
@@ -59,47 +61,21 @@ class BorrowingResource extends Resource
             ->actions([
                 Action::make("approve")
                     ->color("success")
-                    ->modalHeading("Alert conformation")
-                    ->modalSubheading("Are you sure to approve?")
-                    ->modalButton("Yes, No")
                     ->requiresConfirmation()
-                    ->action(function ($record) {
-                        $record->update(['status' => "approved"]);
+                    ->action(function (Borrowing $record) {
+                        Book::where("id", $record->book_id)->update(["stock" => Book::where("id", $record->book_id)->first()->stock - $record->total]);
+                        $record->update(['status' => "APPROVED"]);
                     })
-                    ->visible(fn($record) => $record->status === "pending"),
-                Action::make("rejected")
+                    ->visible(fn(Borrowing $record) => $record->status == "PENDING"),
+                Action::make("reject")
                     ->color("danger")
-                    ->modalHeading("Alert conformation")
-                    ->modalSubheading("Are you sure to reject?")
-                    ->modalButton("Yes, No")
                     ->requiresConfirmation()
-                    ->action(function ($record) {
-                        $record->update(['status' => "rejected"]);
-                    })
-                    ->visible(fn($record) => $record->status === "pending"),
-                DeleteAction::make()->visible(fn($record) => $record->status != "pending")
+                    ->action(fn(Borrowing $record) => $record->update(['status' => "REJECTED"]))
+                    ->visible(fn(Borrowing $record) => $record->status == "PENDING"),
+                DeleteAction::make()->visible(fn(Borrowing $record) => $record->status != "PENDING")
             ])
-            ->headerActions([
-                Action::make("print")
-                    ->label("Generate Report")
-                    ->icon("heroicon-o-printer")
-                    ->color("primary")
-                    ->action(function () {
-                        $data = Borrowing::all();
-
-                        $pdf = Pdf::loadView("generate_report", ["data" => $data]);
-
-                        return response()->streamDownload(
-                            fn() => print ($pdf->output()),
-                            "borrowing_report.pdf"
-                        );
-                    })
-                    ->visible(Borrowing::count() > 0)
-            ], )
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                //
             ]);
     }
 
@@ -114,13 +90,10 @@ class BorrowingResource extends Resource
     {
         return [
             'index' => Pages\ListBorrowings::route('/'),
-            'create' => Pages\CreateBorrowing::route('/create'),
-            'edit' => Pages\EditBorrowing::route('/{record}/edit'),
         ];
     }
-
-    public static function getNavigationGroup(): string|null
+    public static function getNavigationGroup(): string
     {
-        return "Management Book";
+        return "Management";
     }
 }

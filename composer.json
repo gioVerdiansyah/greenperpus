@@ -8,10 +8,10 @@
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.0",
         "filament/filament": "^3.2",
-        "filament/notifications": "^3.2",
         "flowframe/laravel-trend": "^0.3.0",
         "laravel/framework": "^11.9",
-        "laravel/tinker": "^2.9"
+        "laravel/tinker": "^2.9",
+        "mokhosh/filament-rating": "^1.4"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

@@ -9,8 +9,8 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateBookCategory extends CreateRecord
 {
     protected static string $resource = BookCategoryResource::class;
-    public static function afterCreate()
+    protected function getRedirectUrl(): string
     {
-        return redirect(static::getResource()::getUrl('index'));
+        return parent::getResource()::getUrl('index');
     }
 }

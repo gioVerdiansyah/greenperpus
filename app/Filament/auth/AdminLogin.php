@@ -4,24 +4,14 @@ namespace App\Filament\Auth;
 
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Facades\Filament;
-use Filament\Http\Responses\Auth\Contracts\LoginResponse;
-use Filament\Models\Contracts\FilamentUser;
 use Filament\Pages\Auth\Login;
-use Illuminate\Contracts\Support\Htmlable;
+use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 
 class AdminLogin extends Login
 {
-    public function getTItle(): string|Htmlable
+    public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
     {
-        return "Admin Login";
-    }
-    public function getHeading(): string|Htmlable
-    {
-        return "Login Admin";
-    }
-    public function getSubheading(): string|Htmlable
-    {
-        return "Welcome to back Admin!";
+        return "Welcome Admin!";
     }
     public function authenticate(): ?LoginResponse
     {
@@ -40,7 +30,8 @@ class AdminLogin extends Login
         }
 
         $user = Filament::auth()->user();
-        if(!in_array($user->role, ['ADMIN', "OFFICER"])){
+
+        if (!in_array($user->role, ["ADMIN", "OFFICER"])) {
             Filament::auth()->logout();
 
             $this->throwFailureValidationException();

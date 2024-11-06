@@ -4,21 +4,28 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BookResource\Pages;
 use App\Filament\Resources\BookResource\RelationManagers;
+use App\Livewire\BookReviews;
 use App\Models\Book;
-use App\Models\BookCategory;
+use App\Models\BookReview;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\Grid;
+use Filament\Infolists\Components\Group;
+use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\Livewire;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\Split;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Str;
 
 class BookResource extends Resource
 {
@@ -30,22 +37,25 @@ class BookResource extends Resource
     {
         return $form
             ->schema([
-                TextInput::make('name')->required()->maxLength(255),
-                Select::make('book_category_id')
-                    ->relationship('categories', 'name')
+                FileUpload::make("thumbnail")
+                    ->image()
+                    ->maxSize(2048)
+                    ->directory("book_thumbnail")
+                    ->required(),
+                TextInput::make("title")->required(),
+                Select::make("book_category_id")
+                    ->relationship("categories", "name")
                     ->multiple()
-                    ->searchable()
                     ->preload()
                     ->createOptionForm([
-                        TextInput::make('name')
+                        TextInput::make("name")->required()
                     ])
                     ->required(),
-
-                TextInput::make('writer')->required()->maxLength(255),
-                TextInput::make('publisher')->required()->maxLength(255),
-                TextInput::make('year_publish')->required()->integer()->maxLength(4),
-                FileUpload::make("thumbnail")
-                    ->directory('book_thumbnail')
+                TextInput::make("writer")->required(),
+                TextInput::make("publisher")->required(),
+                TextInput::make("year_publish")->required()->integer(),
+                Textarea::make("description")->required(),
+                TextInput::make("stock")->required()->integer(),
             ]);
     }
 
@@ -54,22 +64,18 @@ class BookResource extends Resource
         return $table
             ->columns([
                 ImageColumn::make("thumbnail"),
-                TextColumn::make('name')->searchable(),
-                TextColumn::make('formatted_categories')
-                    ->formatStateUsing(fn ($state) => Str::limit($state, 10))
-                    ->label("Category"),
-                TextColumn::make('writer')->searchable(),
-                TextColumn::make('publisher')->searchable(),
-                TextColumn::make('year_publish')->sortable(),
-                TextColumn::make("created_at")
-                    ->label("Created")
-                    ->date("D F Y")
-                    ->sortable()
+                TextColumn::make("title")
+                    ->limit(20)
+                    ->searchable(),
+                TextColumn::make("stock"),
+                TextColumn::make("writer"),
+                TextColumn::make("publisher"),
             ])
             ->filters([
                 //
             ])
             ->actions([
+                ViewAction::make()->icon("heroicon-o-eye"),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
@@ -78,6 +84,45 @@ class BookResource extends Resource
                 ]),
             ]);
     }
+
+    public static function infoList(\Filament\Infolists\Infolist $infolist): \Filament\Infolists\Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make()
+                    ->schema([
+                        Split::make([
+                            Grid::make()->columns(3)
+                                ->schema([
+                                    ImageEntry::make("thumbnail"),
+                                    Group::make()
+                                        ->schema([
+                                            TextEntry::make("title"),
+                                            TextEntry::make("writer"),
+                                            TextEntry::make("categories")
+                                                ->badge()
+                                                ->getStateUsing(fn(Book $record) => $record->categories->pluck('name')),
+                                        ]),
+                                    Group::make()
+                                        ->schema([
+                                            TextEntry::make("publisher"),
+                                            TextEntry::make("year_publish"),
+                                            TextEntry::make("stock")
+                                        ]),
+                                ])
+                        ])->from("lg"),
+                        Section::make("Description")
+                            ->schema([
+                                TextEntry::make("description")
+                                    ->prose()
+                                    ->hiddenLabel()
+                            ])->collapsible(),
+                        Group::make()
+                            ->schema(fn(Book $book) => [Livewire::make(BookReviews::class, ['id' => $book->id])])
+                    ])
+            ]);
+    }
+
     public static function getRelations(): array
     {
         return [
@@ -89,13 +134,14 @@ class BookResource extends Resource
     {
         return [
             'index' => Pages\ListBooks::route('/'),
+            'view' => Pages\BookDetail::route('/{record}'),
             'create' => Pages\CreateBook::route('/create'),
             'edit' => Pages\EditBook::route('/{record}/edit'),
         ];
     }
 
-    public static function getNavigationGroup():string|null
+    public static function getNavigationGroup(): string
     {
-        return "Management Book";
+        return "Management";
     }
 }
